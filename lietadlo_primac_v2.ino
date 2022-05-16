@@ -38,15 +38,39 @@ void setupSTAGE1(){
   delay(130);   //bezpecna doba potrebna pre uvolnenie tlacidla
   if(redbut()){
     int cislo = 0;
+    int saveVys = 0;
+    int vysledok = 0;
+    int poradie = 0;
     lcd.clear();
+    lcd.blink();
     while(true){
+      if(poradie > 2){ poradie = 0; } // metre nad morom iba trojciferne
       if(redbut()){
         cislo += 1;
-        lcd.print(' ');
-        //lcd.begin(20,4);
-        lcd.setCursor(3,0);
+        if(cislo > 9){ cislo = 0; }
+        lcd.setCursor(poradie,0);
         lcd.print(cislo);
-        delay(130);   //bezpecna doba potrebna pre uvolnenie tlacidla
+      }
+      if(bluebut()){
+        if(poradie == 2){
+          if(cislo != 0){ 
+            vysledok += cislo; 
+            saveVys = 1;  // vypis vysledok
+            }
+        }
+        if(poradie == 1){
+          if(cislo != 0){ vysledok += 10 * cislo; }
+        }
+        if(poradie == 0){
+          vysledok = 100 * cislo;
+        }
+        poradie++;
+      }
+      delay(130);   //bezpecna doba potrebna pre uvolnenie tlacidla  
+      if(saveVys){
+        lcd.setCursor(0,1);
+        lcd.print(vysledok);
+        saveVys = 0;
       }
     }
   }
@@ -55,7 +79,6 @@ void setupSTAGE1(){
   }
   setupSTAGE1();
 }
-
 
 
 
