@@ -14,6 +14,7 @@ bool loraInit = 1;    //lora modul zapnuty
 float data_arr[9];            // pole pre data
 bool setupStage1 = 0;
 bool setupStage2 = 0;
+int vysledok = 0;   //setup hodnota pociatocnej vysky nad morom v m n.m.
 
 void(* resetFunc) (void) = 0;
 
@@ -24,52 +25,83 @@ int redbut(){
   return digitalRead(butD3);
 }
 
+int header(String textIn, int start){    //UI
+  lcd.setCursor(start,0);
+  lcd.print(textIn);
+}
+
+int leftBut(String textIn, int start){   //UI
+  lcd.setCursor(start,3);
+  lcd.print(textIn);
+}
+
+int rightBut(String textIn, int start){  //UI
+  lcd.setCursor(start,3);
+  lcd.print(textIn);
+}
+
+int clearMnmSave(){   //UI
+  for(int i = 0; i < 10; i++){   //vymaz stary vysledok
+    lcd.setCursor(i + 8, 2); 
+    lcd.print(" ");
+    lcd.setCursor(i+2,1);
+    lcd.print(" ");
+  }
+}
+
 void setupSTAGE1(){
   if(!setupStage1){
     setupStage1 = 1;
     lcd.clear();
-    lcd.setCursor(6,0);
-    lcd.print("Measuring");
-    lcd.setCursor(0,3);
-    lcd.print("pressure");
-    lcd.setCursor(12,3);
-    lcd.print("altitude");
+    header("Measuring", 6);
+    leftBut("pressure", 0);
+    rightBut("altitude", 12);
   }
   delay(130);   //bezpecna doba potrebna pre uvolnenie tlacidla
   if(redbut()){
-    int cislo = 0;
+    int cislo = -1;
     int saveVys = 0;
-    int vysledok = 0;
     int poradie = 0;
     lcd.clear();
-    lcd.blink();
+    header("Input start altitude", 0);
+    rightBut("change", 14);
+    leftBut("enter", 0);
+    lcd.setCursor(0,1);
     while(true){
       if(poradie > 2){ poradie = 0; } // metre nad morom iba trojciferne
       if(redbut()){
+        clearMnmSave();
+        lcd.blink();
         cislo += 1;
         if(cislo > 9){ cislo = 0; }
-        lcd.setCursor(poradie,0);
+        lcd.setCursor(poradie,1);
         lcd.print(cislo);
       }
       if(bluebut()){
-        if(poradie == 2){
-          if(cislo != 0){ 
+        if(cislo != -1){  // posun na index je mozny iba ak bolo vybrane cislo
+          if(poradie == 2){
             vysledok += cislo; 
             saveVys = 1;  // vypis vysledok
-            }
+          }
+          if(poradie == 1){
+            if(cislo != 0){ vysledok += 10 * cislo; }
+          }
+          if(poradie == 0){
+            vysledok = 100 * cislo;
+          }
+          poradie++;
+          cislo = -1;
         }
-        if(poradie == 1){
-          if(cislo != 0){ vysledok += 10 * cislo; }
-        }
-        if(poradie == 0){
-          vysledok = 100 * cislo;
-        }
-        poradie++;
       }
       delay(130);   //bezpecna doba potrebna pre uvolnenie tlacidla  
       if(saveVys){
-        lcd.setCursor(0,1);
+        lcd.noBlink();
+        for(int i = 0; i < 3; i++){ lcd.setCursor(i,1); lcd.print(" ");} //vymaz input
+        lcd.setCursor(8,2);
         lcd.print(vysledok);
+        lcd.print(" m n.m.");
+        lcd.setCursor(7,1);
+        lcd.print("SAVE?");
         saveVys = 0;
       }
     }
