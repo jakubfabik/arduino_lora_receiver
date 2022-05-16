@@ -15,6 +15,8 @@ float data_arr[9];            // pole pre data
 bool setupStage1 = 0;
 bool setupStage2 = 0;
 int vysledok = 0;   //setup hodnota pociatocnej vysky nad morom v m n.m.
+bool actAlt = 0;    //toto indikuje ci bolo aktivovany parameter altitude
+double p0 = 0;
 
 void(* resetFunc) (void) = 0;
 
@@ -103,6 +105,21 @@ void setupSTAGE1(){
         lcd.setCursor(7,1);
         lcd.print("SAVE?");
         saveVys = 0;
+        while(true){
+          if(redbut()){
+            break;
+          }
+          if(bluebut()){
+            lcd.clear();
+            lcd.setCursor(0,0);
+            lcd.print("Value saved ...");
+            actAlt = 1;
+            delay(1500);
+            lcd.clear();
+            redBut = 1;
+            return;
+          }
+        }
       }
     }
   }
@@ -198,9 +215,18 @@ void loop() {
         lcd.setCursor(0,3);
         lcd.print("Temp:");
         lcd.print(data_arr[6], 0);
-        lcd.setCursor(10,3);
-        lcd.print("Pre:");
-        lcd.print(data_arr[7]);
+        if(actAlt){
+          lcd.setCursor(12,3);
+          lcd.print("Alt:");
+          if(p0 == 0) {p0 = double(data_arr[7])/pow(1-(double(vysledok)/44330.0),5.255); } //nastav iba raz
+          lcd.print(int(44330.0*(1-pow(double(data_arr[7])/p0,1/5.255))));
+        }
+        else{
+          lcd.setCursor(10,3);
+          lcd.print("Pre:");
+          lcd.print(data_arr[7]);
+        }
+        
       }
     }
     else if(!onepacket) {
